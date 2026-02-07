@@ -2,46 +2,942 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8" />
-    <title>Моё мини‑приложение</title>
+    <title>Shop WebApp</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
     <style>
+        :root {
+            --bg-dark: #020617;
+            --bg-main: #f3f4f6;
+            --card-bg: #ffffff;
+            --accent: #f97316;
+            --accent-soft: #fed7aa;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+        }
+
+        * { box-sizing: border-box; }
+
         body {
             margin: 0;
-            font-family: sans-serif;
-            background: #0f172a;
-            color: #e5e7eb;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: var(--bg-dark);
+        }
+
+        .app {
+            max-width: 480px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background: var(--bg-main);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: #111827;
+            color: #f9fafb;
+        }
+
+        .top-bar-title {
+            font-weight: 600;
+        }
+
+        .icon-btn {
+            background: transparent;
+            border: none;
+            color: inherit;
+            font-size: 20px;
+            padding: 4px;
+            cursor: pointer;
+        }
+
+        .content {
+            flex: 1;
+            padding: 8px;
+            padding-bottom: 72px;
+            overflow-y: auto;
+        }
+
+        .bottom-nav {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 4px 4px 8px;
+            background: #111827;
+            color: #9ca3af;
+            position: sticky;
+            bottom: 0;
+            z-index: 10;
+        }
+
+        .nav-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: inherit;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            height: 100vh;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            border-radius: 8px;
-            border: none;
-            background: #22c55e;
-            color: #111827;
+            font-size: 11px;
+            padding: 4px 0;
             cursor: pointer;
+        }
+
+        .nav-btn .icon {
+            font-size: 18px;
+        }
+
+        .nav-btn span {
+            margin-top: 2px;
+        }
+
+        .nav-btn.active {
+            color: #f9fafb;
+        }
+
+        /* список товаров */
+
+        .product-card {
+            display: flex;
+            background: var(--card-bg);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 8px;
+            box-shadow: 0 1px 3px rgba(15,23,42,0.15);
+            cursor: pointer;
+        }
+
+        .product-card-image {
+            width: 38%;
+            max-width: 150px;
+            overflow: hidden;
+        }
+
+        .product-card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .product-card-body {
+            flex: 1;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-card-header {
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .product-title {
+            font-size: 14px;
+            margin: 0;
+            margin-right: 6px;
+            color: var(--text-main);
+            flex: 1;
+        }
+
+        .favorite-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: #d1d5db;
+        }
+
+        .favorite-btn.active {
+            color: #f97316;
+        }
+
+        .badges {
+            margin: 4px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .badge {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 999px;
+            background: var(--accent-soft);
+            color: #7c2d12;
+            font-weight: 600;
+        }
+
+        .product-card-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin: 4px 0 8px;
+            flex: 1;
+        }
+
+        .product-card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .price {
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--text-main);
+        }
+
+        .add-cart-btn {
+            background: #e5e7eb;
+            border-radius: 999px;
+            border: none;
+            padding: 4px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #374151;
+        }
+
+        .empty-text {
+            text-align: center;
+            margin-top: 24px;
+            color: var(--text-muted);
+        }
+
+        /* страница товара */
+
+        .product-detail {
+            padding: 8px;
+        }
+
+        .detail-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+
+        .detail-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-main);
+            flex: 1;
+            text-align: center;
+        }
+
+        .detail-tags {
+            margin-bottom: 4px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .detail-image-wrapper {
+            margin-top: 4px;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .detail-image-wrapper img {
+            width: 100%;
+            display: block;
+            max-height: 320px;
+            object-fit: cover;
+            cursor: pointer;
+        }
+
+        .detail-dots {
+            position: absolute;
+            bottom: 6px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: rgba(148,163,184,0.8);
+            cursor: pointer;
+        }
+
+        .dot.active {
+            background: #f97316;
+        }
+
+        .detail-price-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 8px;
+        }
+
+        .detail-price {
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .primary-btn {
+            background: #f97316;
+            color: #f9fafb;
+            border-radius: 999px;
+            border: none;
+            padding: 6px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .primary-btn.full {
+            width: 100%;
+            margin-top: 12px;
+        }
+
+        .link-btn {
+            margin-top: 6px;
+            background: none;
+            border: none;
+            padding: 0;
+            color: #2563eb;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .link-btn.small {
+            font-size: 11px;
+        }
+
+        .detail-desc {
+            margin-top: 10px;
+            font-size: 13px;
+            color: var(--text-main);
+        }
+
+        h2 {
+            margin: 8px 0 6px;
+            font-size: 18px;
+        }
+
+        /* корзина */
+
+        .cart-row {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 8px;
+            margin-bottom: 6px;
+            box-shadow: 0 1px 2px rgba(15,23,42,0.08);
+        }
+
+        .cart-row-main {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .cart-row-title {
+            font-weight: 600;
+        }
+
+        .cart-row-qty {
+            color: var(--text-muted);
+        }
+
+        .cart-row-sub {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-muted);
+            align-items: center;
+        }
+
+        .cart-total {
+            margin-top: 8px;
+            font-weight: 600;
+        }
+
+        /* профиль */
+
+        .profile p {
+            font-size: 14px;
+            margin: 4px 0;
+        }
+
+        /* лайтбокс (большая карусель) */
+
+        .lightbox {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.95);
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+            color: #f9fafb;
+        }
+
+        .lightbox.hidden { display: none; }
+
+        .lightbox-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+
+        .lightbox-main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 4px 8px;
+        }
+
+        .lightbox-arrow {
+            background: none;
+            border: none;
+            color: #e5e7eb;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .lightbox-main img {
+            max-width: 80%;
+            max-height: 80vh;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        .lightbox-thumbs {
+            display: flex;
+            gap: 4px;
+            padding: 4px 8px 10px;
+            overflow-x: auto;
+        }
+
+        .lightbox-thumbs .thumb {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 4px;
+            opacity: 0.6;
+            cursor: pointer;
+        }
+
+        .lightbox-thumbs .thumb.active {
+            opacity: 1;
+            outline: 2px solid #f97316;
         }
     </style>
 </head>
 <body>
-    <h1>Привет из мини‑приложения!</h1>
-    <p id="user"></p>
-    <button id="btn">Отправить сообщение в бота</button>
+<div class="app">
+    <header class="top-bar">
+        <div class="top-bar-title">Магазин</div>
+        <button class="icon-btn" id="search-btn">🔍</button>
+    </header>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand(); // развернуть на весь экран
+    <main id="content" class="content"></main>
 
-        const userName = tg.initDataUnsafe.user?.first_name || "друг";
-        document.getElementById("user").innerText = "Тебя зовут: " + userName;
+    <footer class="bottom-nav">
+        <button class="nav-btn" data-tab="discounts">
+            <div class="icon">⚙️</div>
+            <span>Скидки</span>
+        </button>
+        <button class="nav-btn" data-tab="favorites">
+            <div class="icon">❤️</div>
+            <span>Избранное</span>
+        </button>
+        <button class="nav-btn active" data-tab="home">
+            <div class="icon">🏠</div>
+            <span>Главная</span>
+        </button>
+        <button class="nav-btn" data-tab="cart">
+            <div class="icon">🛒</div>
+            <span>Корзина</span>
+        </button>
+        <button class="nav-btn" data-tab="profile">
+            <div class="icon">👤</div>
+            <span>Профиль</span>
+        </button>
+    </footer>
+</div>
 
-        document.getElementById("btn").onclick = () => {
-            tg.sendData("Кнопка в мини‑приложении нажата!");
-        };
-    </script>
+<!-- полноэкранная карусель -->
+<div id="lightbox" class="lightbox hidden">
+    <div class="lightbox-top">
+        <span id="lightbox-counter"></span>
+        <button class="icon-btn" id="lightbox-close">✕</button>
+    </div>
+    <div class="lightbox-main">
+        <button class="lightbox-arrow" id="lightbox-prev">‹</button>
+        <img id="lightbox-image" src="" alt="">
+        <button class="lightbox-arrow" id="lightbox-next">›</button>
+    </div>
+    <div class="lightbox-thumbs" id="lightbox-thumbs"></div>
+</div>
+
+<script>
+    const tg = window.Telegram ? window.Telegram.WebApp : null;
+    if (tg) {
+        tg.ready();
+        tg.expand();
+    }
+
+    /* --- МОДЕЛЬ ТОВАРОВ (ЗДЕСЬ БУДЕШЬ МЕНЯТЬ ПОД СЕБЯ) --- */
+
+    const PRODUCTS = [
+        {
+            id: 1,
+            title: "Oversize hoodie black",
+            price: "200 BYN",
+            discount: true,
+            badges: ["ХИТ ПРОДАЖ", "НОВИНКА"],
+            images: [
+                "https://images.pexels.com/photos/7671166/pexels-photo-7671166.jpeg?auto=compress&cs=tinysrgb&w=800",
+                "https://images.pexels.com/photos/7671168/pexels-photo-7671168.jpeg?auto=compress&cs=tinysrgb&w=800",
+                "https://images.pexels.com/photos/7671169/pexels-photo-7671169.jpeg?auto=compress&cs=tinysrgb&w=800"
+            ],
+            shortDesc: "Тёплое чёрное худи oversize, плотный хлопок.",
+            fullDesc: "Подробное описание товара. Состав 85% хлопок, 15% полиэстер. Размеры S–XL."
+        },
+        {
+            id: 2,
+            title: "Zip hoodie grey",
+            price: "190 BYN",
+            discount: false,
+            badges: ["НОВИНКА"],
+            images: [
+                "https://images.pexels.com/photos/7671172/pexels-photo-7671172.jpeg?auto=compress&cs=tinysrgb&w=800",
+                "https://images.pexels.com/photos/7671173/pexels-photo-7671173.jpeg?auto=compress&cs=tinysrgb&w=800"
+            ],
+            shortDesc: "Серое худи на молнии, удобный городской стиль.",
+            fullDesc: "Подробное описание худи на молнии. Капюшон, карманы кенгуру, размеры S–XL."
+        }
+    ];
+
+    const STORAGE_KEYS = {
+        favorites: 'shop_favorites',
+        cart: 'shop_cart'
+    };
+
+    function loadFavorites() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEYS.favorites);
+            if (!raw) return new Set();
+            return new Set(JSON.parse(raw));
+        } catch (e) { return new Set(); }
+    }
+
+    function saveFavorites(set) {
+        try {
+            localStorage.setItem(STORAGE_KEYS.favorites, JSON.stringify(Array.from(set)));
+        } catch (e) {}
+    }
+
+    function loadCart() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEYS.cart);
+            if (!raw) return {};
+            return JSON.parse(raw);
+        } catch (e) { return {}; }
+    }
+
+    function saveCart(cart) {
+        try {
+            localStorage.setItem(STORAGE_KEYS.cart, JSON.stringify(cart));
+        } catch (e) {}
+    }
+
+    let state = {
+        currentTab: 'home',
+        favorites: loadFavorites(),
+        cart: loadCart(),
+        currentProductId: null,
+        currentImageIndex: 0
+    };
+
+    const contentEl = document.getElementById('content');
+    const navButtons = document.querySelectorAll('.nav-btn');
+
+    navButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            state.currentTab = btn.dataset.tab;
+            state.currentProductId = null;
+            updateNavActive();
+            render();
+        });
+    });
+
+    function updateNavActive() {
+        navButtons.forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.tab === state.currentTab);
+        });
+    }
+
+    function findProduct(id) {
+        return PRODUCTS.find(p => p.id === id);
+    }
+
+    function render() {
+        contentEl.innerHTML = '';
+
+        if (state.currentProductId !== null) {
+            const product = findProduct(state.currentProductId);
+            if (product) {
+                renderProductDetail(product);
+                return;
+            } else {
+                state.currentProductId = null;
+            }
+        }
+
+        switch (state.currentTab) {
+            case 'discounts':
+                renderProductList(PRODUCTS.filter(p => p.discount));
+                break;
+            case 'favorites':
+                renderProductList(PRODUCTS.filter(p => state.favorites.has(p.id)));
+                break;
+            case 'home':
+                renderProductList(PRODUCTS);
+                break;
+            case 'cart':
+                renderCart();
+                break;
+            case 'profile':
+                renderProfile();
+                break;
+        }
+    }
+
+    function renderProductList(list) {
+        if (list.length === 0) {
+            const empty = document.createElement('p');
+            empty.className = 'empty-text';
+            empty.textContent = 'Здесь пока нет товаров.';
+            contentEl.appendChild(empty);
+            return;
+        }
+
+        list.forEach(product => {
+            const card = document.createElement('div');
+            card.className = 'product-card';
+
+            const isFav = state.favorites.has(product.id);
+
+            card.innerHTML = `
+                <div class="product-card-image">
+                    <img src="${product.images[0]}" alt="${product.title}">
+                </div>
+                <div class="product-card-body">
+                    <div class="product-card-header">
+                        <h3 class="product-title">${product.title}</h3>
+                        <button class="favorite-btn ${isFav ? 'active' : ''}" data-id="${product.id}">♡</button>
+                    </div>
+                    <div class="badges">
+                        ${(product.badges || []).map(b => `<span class="badge">${b}</span>`).join('')}
+                    </div>
+                    <p class="product-card-desc">${product.shortDesc}</p>
+                    <div class="product-card-footer">
+                        <span class="price">${product.price}</span>
+                        <button class="add-cart-btn" data-id="${product.id}">В КОРЗИНУ</button>
+                    </div>
+                </div>
+            `;
+
+            card.addEventListener('click', (e) => {
+                if (e.target.closest('button')) return;
+                openProduct(product.id);
+            });
+
+            const favBtn = card.querySelector('.favorite-btn');
+            favBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleFavorite(product.id, favBtn);
+            });
+
+            const addBtn = card.querySelector('.add-cart-btn');
+            addBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                addToCart(product.id);
+            });
+
+            contentEl.appendChild(card);
+        });
+    }
+
+    function toggleFavorite(id, btnEl) {
+        if (state.favorites.has(id)) state.favorites.delete(id);
+        else state.favorites.add(id);
+        saveFavorites(state.favorites);
+        if (btnEl) btnEl.classList.toggle('active', state.favorites.has(id));
+    }
+
+    function addToCart(id) {
+        state.cart[id] = (state.cart[id] || 0) + 1;
+        saveCart(state.cart);
+        if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+    }
+
+    function openProduct(id) {
+        state.currentProductId = id;
+        state.currentImageIndex = 0;
+        render();
+    }
+
+    function renderProductDetail(product) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'product-detail';
+
+        const isFav = state.favorites.has(product.id);
+
+        wrapper.innerHTML = `
+            <div class="detail-top">
+                <button class="icon-btn" id="detail-back">←</button>
+                <div class="detail-title">${product.title}</div>
+                <button class="icon-btn" id="detail-close">✕</button>
+            </div>
+
+            <div class="detail-tags">
+                ${(product.badges || []).map(b => `<span class="badge">${b}</span>`).join('')}
+            </div>
+
+            <div class="detail-image-wrapper">
+                <img id="detail-image" src="${product.images[0]}" alt="${product.title}">
+                <div class="detail-dots">
+                    ${product.images.map((_, idx) =>
+                        `<span class="dot ${idx === 0 ? 'active' : ''}" data-index="${idx}"></span>`
+                    ).join('')}
+                </div>
+            </div>
+
+            <div class="detail-price-row">
+                <div class="detail-price">Цена: ${product.price}</div>
+                <button class="primary-btn" id="detail-add-cart">В КОРЗИНУ</button>
+            </div>
+
+            <button class="link-btn" id="detail-fav-btn">
+                ${isFav ? '★ Удалить из избранного' : '☆ В избранное'}
+            </button>
+
+            <div class="detail-desc">
+                ${product.fullDesc}
+            </div>
+        `;
+
+        contentEl.appendChild(wrapper);
+
+        document.getElementById('detail-back').addEventListener('click', () => {
+            state.currentProductId = null;
+            render();
+        });
+        document.getElementById('detail-close').addEventListener('click', () => {
+            state.currentProductId = null;
+            render();
+        });
+
+        document.getElementById('detail-add-cart').addEventListener('click', () => {
+            addToCart(product.id);
+        });
+
+        const favBtn = document.getElementById('detail-fav-btn');
+        favBtn.addEventListener('click', () => {
+            toggleFavorite(product.id);
+            const isNowFav = state.favorites.has(product.id);
+            favBtn.textContent = isNowFav ? '★ Удалить из избранного' : '☆ В избранное';
+        });
+
+        const imgEl = document.getElementById('detail-image');
+        imgEl.addEventListener('click', () => openLightbox());
+
+        wrapper.querySelectorAll('.dot').forEach(dot => {
+            dot.addEventListener('click', () => {
+                const idx = Number(dot.dataset.index);
+                setCurrentImageIndex(idx);
+            });
+        });
+    }
+
+    function setCurrentImageIndex(idx) {
+        const product = findProduct(state.currentProductId);
+        if (!product) return;
+        if (idx < 0 || idx >= product.images.length) return;
+        state.currentImageIndex = idx;
+
+        const imgEl = document.getElementById('detail-image');
+        if (imgEl) imgEl.src = product.images[idx];
+
+        document.querySelectorAll('.detail-dots .dot').forEach((d, i) =>
+            d.classList.toggle('active', i === idx)
+        );
+
+        updateLightboxImage();
+    }
+
+    /* лайтбокс / полноэкранная карусель */
+
+    const lightboxEl   = document.getElementById('lightbox');
+    const lbImgEl      = document.getElementById('lightbox-image');
+    const lbCounterEl  = document.getElementById('lightbox-counter');
+    const lbThumbsEl   = document.getElementById('lightbox-thumbs');
+
+    document.getElementById('lightbox-close')
+        .addEventListener('click', closeLightbox);
+    document.getElementById('lightbox-prev')
+        .addEventListener('click', () => changeLightboxImage(-1));
+    document.getElementById('lightbox-next')
+        .addEventListener('click', () => changeLightboxImage(1));
+
+    function openLightbox() {
+        const product = findProduct(state.currentProductId);
+        if (!product) return;
+        lightboxEl.classList.remove('hidden');
+        updateLightboxImage(true);
+    }
+
+    function closeLightbox() {
+        lightboxEl.classList.add('hidden');
+    }
+
+    function changeLightboxImage(delta) {
+        const product = findProduct(state.currentProductId);
+        if (!product) return;
+        let idx = state.currentImageIndex + delta;
+        if (idx < 0) idx = product.images.length - 1;
+        if (idx >= product.images.length) idx = 0;
+        setCurrentImageIndex(idx);
+    }
+
+    function updateLightboxImage(initThumbs) {
+        if (lightboxEl.classList.contains('hidden')) return;
+        const product = findProduct(state.currentProductId);
+        if (!product) return;
+        const idx = state.currentImageIndex;
+
+        lbImgEl.src = product.images[idx];
+        lbCounterEl.textContent = `${idx + 1}/${product.images.length}`;
+
+        if (initThumbs) {
+            lbThumbsEl.innerHTML = '';
+            product.images.forEach((src, i) => {
+                const t = document.createElement('img');
+                t.src = src;
+                t.className = 'thumb' + (i === idx ? ' active' : '');
+                t.addEventListener('click', () => setCurrentImageIndex(i));
+                lbThumbsEl.appendChild(t);
+            });
+        } else {
+            lbThumbsEl.querySelectorAll('.thumb').forEach((t, i) =>
+                t.classList.toggle('active', i === idx)
+            );
+        }
+    }
+
+    /* корзина */
+
+    function renderCart() {
+        const title = document.createElement('h2');
+        title.textContent = 'Корзина';
+        contentEl.appendChild(title);
+
+        const entries = Object.entries(state.cart);
+        if (entries.length === 0) {
+            const p = document.createElement('p');
+            p.className = 'empty-text';
+            p.textContent = 'Корзина пуста.';
+            contentEl.appendChild(p);
+            return;
+        }
+
+        let total = 0;
+
+        entries.forEach(([id, qty]) => {
+            const product = findProduct(Number(id));
+            if (!product) return;
+
+            const row = document.createElement('div');
+            row.className = 'cart-row';
+
+            const priceNum = Number(product.price.replace(/[^\d.]/g, '')) || 0;
+            const subtotal = priceNum * qty;
+            total += subtotal;
+
+            row.innerHTML = `
+                <div class="cart-row-main">
+                    <span class="cart-row-title">${product.title}</span>
+                    <span class="cart-row-qty">x ${qty}</span>
+                </div>
+                <div class="cart-row-sub">
+                    <span>${product.price}</span>
+                    <button class="link-btn small" data-id="${product.id}">Удалить</button>
+                </div>
+            `;
+
+            row.querySelector('button').addEventListener('click', () => {
+                delete state.cart[id];
+                saveCart(state.cart);
+                render();
+            });
+
+            contentEl.appendChild(row);
+        });
+
+        const totalEl = document.createElement('div');
+        totalEl.className = 'cart-total';
+        totalEl.textContent = `Итого по ценам: ~ ${total} BYN`;
+        contentEl.appendChild(totalEl);
+
+        const orderBtn = document.createElement('button');
+        orderBtn.className = 'primary-btn full';
+        orderBtn.textContent = 'Оформить заказ';
+        orderBtn.addEventListener('click', () => {
+            if (tg) {
+                tg.sendData(JSON.stringify({ type: 'order', cart: state.cart }));
+            }
+            alert('Здесь можно реализовать оформление заказа через бота.');
+        });
+        contentEl.appendChild(orderBtn);
+    }
+
+    /* профиль */
+
+    function renderProfile() {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'profile';
+
+        if (!tg || !tg.initDataUnsafe || !tg.initDataUnsafe.user) {
+            wrapper.innerHTML = `
+                <h2>Профиль</h2>
+                <p>Откройте мини‑приложение из Telegram, чтобы увидеть профиль пользователя.</p>
+            `;
+        } else {
+            const u = tg.initDataUnsafe.user;
+            wrapper.innerHTML = `
+                <h2>Профиль</h2>
+                <p><b>Имя:</b> ${u.first_name || ''} ${u.last_name || ''}</p>
+                <p><b>Username:</b> @${u.username || '—'}</p>
+                <p><b>User ID:</b> ${u.id}</p>
+            `;
+        }
+
+        contentEl.appendChild(wrapper);
+    }
+
+    updateNavActive();
+    render();
+</script>
 </body>
 </html>
